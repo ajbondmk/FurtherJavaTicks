@@ -17,6 +17,9 @@ public class ExternalSort {
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 		//TODO: Complete this method
+	}
+
+	private static void testReadWrite() throws IOException {
 		DataOutputStream dOut = getOutputStream();
 		dOut.writeInt(1);
 		dOut.writeInt(2);
@@ -26,7 +29,7 @@ public class ExternalSort {
 		//f.seek(4);
 		//System.out.println("Read four bytes as an int value " + f.readInt());
 		//System.out.println("The file is " + f.length() + " bytes long");
-		printFile();
+		printFile(getInputStream());
 	}
 
 	private static DataOutputStream getOutputStream() throws IOException {
@@ -49,9 +52,8 @@ public class ExternalSort {
 		);
 	}
 
-	private static void printFile() {
+	private static void printFile(DataInputStream dIn) {
 		try {
-			DataInputStream dIn = getInputStream();
 			System.out.println("sizeing: " + dIn.available());
 			while (dIn.available() > 0) {
 				System.out.println("printing: " + dIn.readInt());
@@ -94,10 +96,9 @@ public class ExternalSort {
 	}
 
 	public static void main(String[] args) throws Exception {
-		//String f1 = args[0];
-		//String f2 = args[1];
-		//sort(f1, f2);
-		sort("a", "b");
-		//System.out.println("The checksum is: " + checkSum(f1));
+		String f1 = args[0];
+		String f2 = args[1];
+		sort(f1, f2);
+		System.out.println("The checksum for " + f1 + " is: " + checkSum(f1));
 	}
 }
