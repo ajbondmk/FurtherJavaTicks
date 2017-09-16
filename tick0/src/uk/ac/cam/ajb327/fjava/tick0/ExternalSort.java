@@ -20,7 +20,7 @@ public class ExternalSort {
 	}
 
 	private static void testReadWrite() throws IOException {
-		DataOutputStream dOut = getOutputStream();
+		DataOutputStream dOut = getOutputStream("./example/testReadWrite");
 		dOut.writeInt(1);
 		dOut.writeInt(2);
 		dOut.writeInt(3);
@@ -29,24 +29,24 @@ public class ExternalSort {
 		//f.seek(4);
 		//System.out.println("Read four bytes as an int value " + f.readInt());
 		//System.out.println("The file is " + f.length() + " bytes long");
-		printFile(getInputStream());
+		printFile(getInputStream("./example/testReadWrite"));
 	}
 
-	private static DataOutputStream getOutputStream() throws IOException {
+	private static DataOutputStream getOutputStream(String location) throws IOException {
 		return new DataOutputStream(
 			new BufferedOutputStream(
 				new FileOutputStream(
-					new RandomAccessFile("./outputs/example2","rw").getFD()
+					new RandomAccessFile(location,"rw").getFD()
 				)
 			)
 		);
 	}
 
-	private static DataInputStream getInputStream() throws IOException {
+	private static DataInputStream getInputStream(String location) throws IOException {
 		return new DataInputStream(
 			new BufferedInputStream(
 				new FileInputStream(
-					new RandomAccessFile("./outputs/example2","rw").getFD()
+					new RandomAccessFile(location,"rw").getFD()
 				)
 			)
 		);
@@ -102,8 +102,8 @@ public class ExternalSort {
 		//System.out.println("The checksum is: " + checkSum(f1));
 		int testUpTo = 6; //HARDCODED
 		for (int testNum = 1; testNum <= testUpTo; testNum++) {
-			String f1 = "inputs/test" + testNum + "a.dat";
-			String f2 = "inputs/test" + testNum + "b.dat";
+			String f1 = "test-suite/test" + testNum + "a.dat";
+			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkChecksum(testNum);
 		}
