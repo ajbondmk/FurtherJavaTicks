@@ -96,9 +96,44 @@ public class ExternalSort {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String f1 = args[0];
-		String f2 = args[1];
-		sort(f1, f2);
-		System.out.println("The checksum for " + f1 + " is: " + checkSum(f1));
+		//String f1 = args[0];
+		//String f2 = args[1];
+		//sort(f1, f2);
+		//System.out.println("The checksum is: " + checkSum(f1));
+		int testUpTo = 6; //HARDCODED
+		for (int testNum = 1; testNum <= testUpTo; testNum++) {
+			String f1 = "inputs/test" + testNum + "a.dat";
+			String f2 = "inputs/test" + testNum + "b.dat";
+			sort(f1, f2);
+			checkChecksum(testNum);
+		}
+	}
+
+	private static void checkChecksum(int testNum) {
+		String[] correctChecksums = {
+			"d41d8cd98f0b24e980998ecf8427e",
+			"a54f041a9e15b5f25c463f1db7449",
+			"c2cb56f4c5bf656faca0986e7eba38",
+			"c1fa1f22fa36d331be4027e683baad6",
+			"8d79cbc9a4ecdde112fc91ba625b13c2",
+			"1e52ef3b2acef1f831f728dc2d16174d",
+			"6b15b255d36ae9c85ccd3475ec11c3",
+			"1484c15a27e48931297fb6682ff625",
+			"ad4f60f065174cf4f8b15cbb1b17a1bd",
+			"32446e5dd58ed5a5d7df2522f0240",
+			"435fe88036417d686ad8772c86622ab",
+			"c4dacdbc3c2e8ddbb94aac3115e25aa2",
+			"3d5293e89244d513abdf94be643c630",
+			"468c1c2b4c1b74ddd44ce2ce775fb35c",
+			"79d830e4c0efa93801b5d89437f9f3e",
+			"c7477d400c36fca5414e0674863ba91",
+			"cc80f01b7d2d26042f3286bdeff0d9"
+		};
+		String f1Checksum = checkSum("test-suite/test" + testNum + "a.dat");
+		System.out.println("Test file " + testNum);
+		System.out.println("Calculated checksum: " + f1Checksum);
+		System.out.println("Correct checksum: " + correctChecksums[testNum-1]);
+		System.out.println(f1Checksum.equals(correctChecksums[testNum-1]) ? "Test passed!" : "Test failed.");
+		System.out.println();
 	}
 }
