@@ -19,16 +19,16 @@ public class ExternalSort {
 
 		int length = fileLength(f1);
 		boolean readingFromF1 = true;
-		for (int chunkSize = 1; chunkSize < length/4; chunkSize *= 2) {
+		for (int chunkSize = 4; chunkSize < length; chunkSize *= 2) {
 			int lengthLeft = length;
 			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
 			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
-			dIn2.skip(chunkSize*4);
+			dIn2.skip(chunkSize);
 			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
 			while (true) {
-				if (lengthLeft > chunkSize*4) {
+				if (lengthLeft > chunkSize) {
 					int leftIn1 = chunkSize;
-					int leftIn2 = (lengthLeft >= 8*chunkSize) ? chunkSize : (lengthLeft-4*chunkSize)/4;
+					int leftIn2 = (lengthLeft >= 2*chunkSize) ? chunkSize : lengthLeft-chunkSize;
 					int current1 = dIn1.readInt();
 					int current2 = dIn2.readInt();
 					while (true) {
@@ -36,17 +36,17 @@ public class ExternalSort {
 							break;
 						} else if ((current1 < current2 && leftIn1 != 0) || leftIn2 == 0) {
 							dOut.writeInt(current1);
-							leftIn1--;
+							leftIn1 -= 4;
 							if (leftIn1 != 0) current1 = dIn1.readInt();
 						} else {
 							dOut.writeInt(current2);
-							leftIn2--;
+							leftIn2 -= 4;
 							if (leftIn2 != 0) current2 = dIn2.readInt();
 						}
 					}
-					dIn1.skip(chunkSize*4);
-					dIn2.skip(chunkSize*4);
-					lengthLeft -= 8*chunkSize;
+					dIn1.skip(chunkSize);
+					dIn2.skip(chunkSize);
+					lengthLeft -= 2*chunkSize;
 				} else {
 					while (lengthLeft > 0) {
 						dOut.writeInt(dIn1.readInt());
@@ -76,7 +76,9 @@ public class ExternalSort {
 
 	private static int fileLength(String file) throws IOException {
 		DataInputStream fileIn = getInputStream(file);
-		return fileIn.available();
+		int length = fileIn.available();
+		fileIn.close();
+		return length;
 	}
 
 	private static DataOutputStream getOutputStream(String location) throws IOException {
@@ -177,10 +179,8 @@ public class ExternalSort {
 			"cc80f01b7d2d26042f3286bdeff0d9"
 		};
 		String fileChecksum = checkSum(file);
-		System.out.println("Test file " + file);
-		System.out.println("Calculated checksum: " + fileChecksum);
-		System.out.println("Correct checksum: " + correctChecksums[testNum-1]);
-		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? "Test passed!" : "Test failed.");
+		System.out.print("Test file " + testNum);
+		System.out.print(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
 		System.out.println();
 	}
 }
