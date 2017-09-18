@@ -34,7 +34,7 @@ public class ExternalSort {
 				if (lengthLeft > chunkSize) {
 					int leftIn1 = chunkSize;
 					int leftIn2 = chunkSize;
-					if (lengthLeft >= 2*chunkSize) {
+					if (lengthLeft < 2*chunkSize) {
 						leftIn2 = lengthLeft-chunkSize;
 					}
 					int current1 = dIn1.readInt();
