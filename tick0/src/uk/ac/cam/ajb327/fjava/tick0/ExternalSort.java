@@ -9,6 +9,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -76,14 +77,9 @@ public class ExternalSort {
 		}
 
 		if (!readingFromF1) {
-			DataInputStream dIn = getInputStream(f2);
-			DataOutputStream dOut = getOutputStream(f1);
-			while (dIn.available() > 0) {
-				dOut.writeInt(dIn.readInt());
-			}
-			dOut.flush();
-			dIn.close();
-			dOut.close();
+			FileChannel src = new FileInputStream(f2).getChannel();
+			FileChannel dest = new FileOutputStream(f1).getChannel();
+			dest.transferFrom(src, 0, length);
 		}
 
 	}
@@ -99,7 +95,7 @@ public class ExternalSort {
 		return new DataOutputStream(
 			new BufferedOutputStream(
 				new FileOutputStream(
-					new RandomAccessFile(location,"rw").getFD()
+					location
 				)
 			)
 		);
@@ -109,7 +105,7 @@ public class ExternalSort {
 		return new DataInputStream(
 			new BufferedInputStream(
 				new FileInputStream(
-					new RandomAccessFile(location,"rw").getFD()
+					location
 				)
 			)
 		);
