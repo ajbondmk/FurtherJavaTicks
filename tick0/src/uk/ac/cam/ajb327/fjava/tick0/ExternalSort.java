@@ -44,10 +44,8 @@ public class ExternalSort {
 					int current1 = dIn1.readInt();
 					int current2 = dIn2.readInt();
 
-					while (true) {
-						if (leftIn1 == 0 && leftIn2 == 0) {
-							break;
-						} else if ((current1 < current2 && leftIn1 != 0) || leftIn2 == 0) {
+					while (leftIn1 > 0 || leftIn2 > 0) {
+						if ((current1 < current2 && leftIn1 != 0) || leftIn2 == 0) {
 							dOut.writeInt(current1);
 							leftIn1 -= 4;
 							if (leftIn1 != 0) current1 = dIn1.readInt();
