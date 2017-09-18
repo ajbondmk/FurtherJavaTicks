@@ -17,20 +17,29 @@ public class ExternalSort {
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
+		//All lengths and counts are in bytes
 		int length = fileLength(f1);
 		boolean readingFromF1 = true;
+
 		for (int chunkSize = 4; chunkSize < length; chunkSize *= 2) {
+
 			int lengthLeft = length;
 			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
 			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
-			dIn2.skip(chunkSize);
 			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
+			dIn2.skip(chunkSize);
+
 			while (true) {
+
 				if (lengthLeft > chunkSize) {
 					int leftIn1 = chunkSize;
-					int leftIn2 = (lengthLeft >= 2*chunkSize) ? chunkSize : lengthLeft-chunkSize;
+					int leftIn2 = chunkSize;
+					if (lengthLeft >= 2*chunkSize) {
+						leftIn2 = lengthLeft-chunkSize;
+					}
 					int current1 = dIn1.readInt();
 					int current2 = dIn2.readInt();
+
 					while (true) {
 						if (leftIn1 == 0 && leftIn2 == 0) {
 							break;
@@ -54,14 +63,18 @@ public class ExternalSort {
 					}
 					break;
 				}
+
 			}
 
 			dOut.flush();
 			dIn1.close();
 			dIn2.close();
 			dOut.close();
+
 			readingFromF1 = !readingFromF1;
+
 		}
+
 		if (!readingFromF1) {
 			DataInputStream dIn = getInputStream(f2);
 			DataOutputStream dOut = getOutputStream(f1);
@@ -72,6 +85,7 @@ public class ExternalSort {
 			dIn.close();
 			dOut.close();
 		}
+
 	}
 
 	private static int fileLength(String file) throws IOException {
