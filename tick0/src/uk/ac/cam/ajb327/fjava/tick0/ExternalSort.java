@@ -55,11 +55,22 @@ public class ExternalSort {
 					break;
 				}
 			}
+
 			dOut.flush();
 			dIn1.close();
 			dIn2.close();
 			dOut.close();
 			readingFromF1 = !readingFromF1;
+		}
+		if (!readingFromF1) {
+			DataInputStream dIn = getInputStream(f2);
+			DataOutputStream dOut = getOutputStream(f1);
+			while (dIn.available() > 0) {
+				dOut.writeInt(dIn.readInt());
+			}
+			dOut.flush();
+			dIn.close();
+			dOut.close();
 		}
 	}
 
