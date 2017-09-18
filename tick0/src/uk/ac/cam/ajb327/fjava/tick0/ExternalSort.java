@@ -3,7 +3,6 @@ package uk.ac.cam.ajb327.fjava.tick0;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.DataOutputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
