@@ -35,10 +35,11 @@ public class ExternalSort {
 			while (true) {
 
 				if (lengthLeft > chunkSize) {
+
 					int leftIn1 = chunkSize;
 					int leftIn2 = chunkSize;
-					if (lengthLeft < 2*chunkSize) {
-						leftIn2 = lengthLeft-chunkSize;
+					if (lengthLeft < 2 * chunkSize) {
+						leftIn2 = lengthLeft - chunkSize;
 					}
 					int current1 = dIn1.readInt();
 					int current2 = dIn2.readInt();
@@ -56,15 +57,19 @@ public class ExternalSort {
 							if (leftIn2 != 0) current2 = dIn2.readInt();
 						}
 					}
+
 					dIn1.skip(chunkSize);
 					dIn2.skip(chunkSize);
-					lengthLeft -= 2*chunkSize;
+					lengthLeft -= 2 * chunkSize;
+
 				} else {
+
 					while (lengthLeft > 0) {
 						dOut.writeInt(dIn1.readInt());
 						lengthLeft -= 4;
 					}
 					break;
+
 				}
 
 			}
