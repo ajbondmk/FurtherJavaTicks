@@ -19,7 +19,10 @@ public class ExternalSort {
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
 		//All lengths and counts are in bytes
-		int length = fileLength(f1);
+		DataInputStream tempIn = getInputStream(f1);
+		int length = tempIn.available();
+		tempIn.close();
+
 		boolean readingFromF1 = true;
 
 		for (int chunkSize = 4; chunkSize < length; chunkSize *= 2) {
@@ -84,31 +87,12 @@ public class ExternalSort {
 
 	}
 
-	private static int fileLength(String file) throws IOException {
-		DataInputStream fileIn = getInputStream(file);
-		int length = fileIn.available();
-		fileIn.close();
-		return length;
-	}
-
 	private static DataOutputStream getOutputStream(String location) throws IOException {
-		return new DataOutputStream(
-			new BufferedOutputStream(
-				new FileOutputStream(
-					location
-				)
-			)
-		);
+		return new DataOutputStream( new BufferedOutputStream( new FileOutputStream(location) ) );
 	}
 
 	private static DataInputStream getInputStream(String location) throws IOException {
-		return new DataInputStream(
-			new BufferedInputStream(
-				new FileInputStream(
-					location
-				)
-			)
-		);
+		return new DataInputStream( new BufferedInputStream( new FileInputStream(location) ) );
 	}
 
 	private static void printFile(DataInputStream dIn) {
