@@ -16,20 +16,56 @@ import java.security.NoSuchAlgorithmException;
 public class ExternalSort {
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
-		//TODO: Complete this method
+
+		int length = fileLength(f1);
+		boolean readingFromF1 = true;
+		for (int chunkSize = 1; chunkSize < length/4; chunkSize *= 2) {
+			int lengthLeft = length;
+			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
+			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
+			dIn2.skip(chunkSize*4);
+			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
+			while (true) {
+				if (lengthLeft > chunkSize*4) {
+					int leftIn1 = chunkSize;
+					int leftIn2 = (lengthLeft >= 8*chunkSize) ? chunkSize : (lengthLeft-4*chunkSize)/4;
+					int current1 = dIn1.readInt();
+					int current2 = dIn2.readInt();
+					while (true) {
+						if (leftIn1 == 0 && leftIn2 == 0) {
+							break;
+						} else if ((current1 < current2 && leftIn1 != 0) || leftIn2 == 0) {
+							dOut.writeInt(current1);
+							leftIn1--;
+							if (leftIn1 != 0) current1 = dIn1.readInt();
+						} else {
+							dOut.writeInt(current2);
+							leftIn2--;
+							if (leftIn2 != 0) current2 = dIn2.readInt();
+						}
+					}
+					dIn1.skip(chunkSize*4);
+					dIn2.skip(chunkSize*4);
+					lengthLeft -= 8*chunkSize;
+				} else {
+					while (lengthLeft > 0) {
+						dOut.writeInt(dIn1.readInt());
+						lengthLeft -= 4;
+					}
+					break;
+				}
+			}
+			dOut.flush();
+			dIn1.close();
+			dIn2.close();
+			dOut.close();
+			readingFromF1 = !readingFromF1;
+		}
 	}
 
-	private static void testReadWrite() throws IOException {
-		DataOutputStream dOut = getOutputStream("./example/testReadWrite");
-		dOut.writeInt(1);
-		dOut.writeInt(2);
-		dOut.writeInt(3);
-		dOut.flush();
-		dOut.close();
-		//f.seek(4);
-		//System.out.println("Read four bytes as an int value " + f.readInt());
-		//System.out.println("The file is " + f.length() + " bytes long");
-		printFile(getInputStream("./example/testReadWrite"));
+	private static int fileLength(String file) throws IOException {
+		DataInputStream fileIn = getInputStream(file);
+		return fileIn.available();
 	}
 
 	private static DataOutputStream getOutputStream(String location) throws IOException {
@@ -54,10 +90,10 @@ public class ExternalSort {
 
 	private static void printFile(DataInputStream dIn) {
 		try {
-			System.out.println("sizeing: " + dIn.available());
 			while (dIn.available() > 0) {
-				System.out.println("printing: " + dIn.readInt());
+				System.out.print(dIn.readInt() + " ");
 			}
+			System.out.println();
 		} catch (IOException err) {
 			System.out.println(err.getMessage());
 		}
@@ -100,16 +136,16 @@ public class ExternalSort {
 		//String f2 = args[1];
 		//sort(f1, f2);
 		//System.out.println("The checksum is: " + checkSum(f1));
-		int testUpTo = 6; //HARDCODED
-		for (int testNum = 1; testNum <= testUpTo; testNum++) {
+
+		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
-			checkChecksum(testNum);
+			checkCheckSum(testNum, f1);
 		}
 	}
 
-	private static void checkChecksum(int testNum) {
+	private static void checkCheckSum(int testNum, String file) throws IOException {
 		String[] correctChecksums = {
 			"d41d8cd98f0b24e980998ecf8427e",
 			"a54f041a9e15b5f25c463f1db7449",
@@ -129,11 +165,11 @@ public class ExternalSort {
 			"c7477d400c36fca5414e0674863ba91",
 			"cc80f01b7d2d26042f3286bdeff0d9"
 		};
-		String f1Checksum = checkSum("test-suite/test" + testNum + "a.dat");
-		System.out.println("Test file " + testNum);
-		System.out.println("Calculated checksum: " + f1Checksum);
+		String fileChecksum = checkSum(file);
+		System.out.println("Test file " + file);
+		System.out.println("Calculated checksum: " + fileChecksum);
 		System.out.println("Correct checksum: " + correctChecksums[testNum-1]);
-		System.out.println(f1Checksum.equals(correctChecksums[testNum-1]) ? "Test passed!" : "Test failed.");
+		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? "Test passed!" : "Test failed.");
 		System.out.println();
 	}
 }
