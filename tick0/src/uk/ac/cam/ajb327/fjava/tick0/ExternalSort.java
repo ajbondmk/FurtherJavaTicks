@@ -45,14 +45,14 @@ public class ExternalSort {
 					int current2 = dIn2.readInt();
 
 					while (leftIn1 > 0 || leftIn2 > 0) {
-						if ((current1 < current2 && leftIn1 != 0) || leftIn2 == 0) {
+						if ((current1 < current2 && leftIn1 > 0) || leftIn2 == 0) {
 							dOut.writeInt(current1);
 							leftIn1 -= 4;
-							if (leftIn1 != 0) current1 = dIn1.readInt();
+							if (leftIn1 > 0) current1 = dIn1.readInt();
 						} else {
 							dOut.writeInt(current2);
 							leftIn2 -= 4;
-							if (leftIn2 != 0) current2 = dIn2.readInt();
+							if (leftIn2 > 0) current2 = dIn2.readInt();
 						}
 					}
 
