@@ -12,6 +12,8 @@ import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 
 public class ExternalSort {
 
@@ -90,11 +92,11 @@ public class ExternalSort {
 
 	}
 
-	private static DataOutputStream getOutputStream(String location) throws IOException {
+	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
 		return new DataOutputStream( new BufferedOutputStream( new FileOutputStream(location) ) );
 	}
 
-	private static DataInputStream getInputStream(String location) throws IOException {
+	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
 		return new DataInputStream( new BufferedInputStream( new FileInputStream(location) ) );
 	}
 
@@ -147,12 +149,16 @@ public class ExternalSort {
 		//sort(f1, f2);
 		//System.out.println("The checksum is: " + checkSum(f1));
 
+		Instant start = Instant.now();
 		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
 		}
+		Instant end = Instant.now();
+		long timeTaken = Duration.between(start, end).getSeconds();
+		System.out.println("Time taken: " + timeTaken + " seconds");
 	}
 
 	private static void checkCheckSum(int testNum, String file) throws IOException {
