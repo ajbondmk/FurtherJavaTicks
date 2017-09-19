@@ -59,6 +59,7 @@ public class ExternalSort {
 					dIn1.skip(chunkSize);
 					dIn2.skip(chunkSize);
 					lengthLeft -= 2 * chunkSize;
+					if (lengthLeft < 0) lengthLeft = 0;
 
 				} else {
 
