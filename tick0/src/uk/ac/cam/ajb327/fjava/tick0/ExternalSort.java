@@ -43,35 +43,44 @@ public class ExternalSort {
 	}
 
 	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
-		List<Integer> chunk = new ArrayList<>();
+
+		List<Integer> chunkToSort = new ArrayList<>();
 
 		DataInputStream dInInitial = getInputStream(f1);
 		DataOutputStream dOutInitial = getOutputStream(f2);
 
-		for (int num = 1; num <= fileLength / 4; num++) {
-			chunk.add(dInInitial.readInt());
-			boolean endOfChunk = (num) % initialSortInts == 0;
-			boolean endOfFile = num == fileLength / 4;
+		int fileLengthInts = fileLength / 4;
+
+		for (int num = 1; num <= fileLengthInts; num++) {
+			chunkToSort.add(dInInitial.readInt());
+			boolean endOfChunk = (num % initialSortInts == 0);
+			boolean endOfFile = (num == fileLengthInts);
 			if (endOfChunk || endOfFile) {
-				Collections.sort(chunk);
-				for (int numToWrite = 0; numToWrite < chunk.size(); numToWrite++) {
-					dOutInitial.writeInt(chunk.get(numToWrite));
+				Collections.sort(chunkToSort);
+				int chunkSize = chunkToSort.size();
+				for (int numToWrite = 0; numToWrite < chunkSize; numToWrite++) {
+					dOutInitial.writeInt(chunkToSort.get(numToWrite));
 				}
-				chunk.clear();
+				chunkToSort.clear();
 				if (endOfFile) break;
 			}
 		}
 
 		dOutInitial.flush();
+
+		dInInitial.close();
+		dOutInitial.close();
+
 	}
 
 	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
 
 		boolean readingFromF1 = false;
 
-		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *=2) {
+		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *= 2) {
 
 			int lengthLeft = fileLength;
+
 			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
 			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
 			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
@@ -119,6 +128,7 @@ public class ExternalSort {
 			}
 
 			dOut.flush();
+
 			dIn1.close();
 			dIn2.close();
 			dOut.close();
