@@ -1,34 +1,94 @@
 package uk.ac.cam.ajb327.fjava.tick0;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
+import java.io.DataOutputStream;
 import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.time.Instant;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class ExternalSort {
+
+	private static long timeSpentInitial = 0;
+	private static long timeSpentMerge = 0;
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
 		//All lengths and counts are in bytes
 		DataInputStream tempIn = getInputStream(f1);
-		int length = tempIn.available();
+		int fileLength = tempIn.available();
 		tempIn.close();
 
-		boolean readingFromF1 = true;
+		int initialSortInts = 65536;
 
-		for (int chunkSize = 4; chunkSize < length; chunkSize *= 2) {
+		initialSort(f1, f2, fileLength, initialSortInts);
+		mergeSort(f1, f2, fileLength, initialSortInts);
 
-			int lengthLeft = length;
+	}
+
+	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
+		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
+	}
+
+	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
+		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
+	}
+
+	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+
+		long startTime = System.nanoTime();
+
+		List<Integer> chunkToSort = new ArrayList<>();
+
+		DataInputStream dInInitial = getInputStream(f1);
+		DataOutputStream dOutInitial = getOutputStream(f2);
+
+		int fileLengthInts = fileLength / 4;
+
+		for (int num = 1; num <= fileLengthInts; num++) {
+			chunkToSort.add(dInInitial.readInt());
+			boolean endOfChunk = (num % initialSortInts == 0);
+			boolean endOfFile = (num == fileLengthInts);
+			if (endOfChunk || endOfFile) {
+				Collections.sort(chunkToSort);
+				int chunkSize = chunkToSort.size();
+				for (int numToWrite = 0; numToWrite < chunkSize; numToWrite++) {
+					dOutInitial.writeInt(chunkToSort.get(numToWrite));
+				}
+				chunkToSort.clear();
+				if (endOfFile) break;
+			}
+		}
+
+		dOutInitial.flush();
+
+		dInInitial.close();
+		dOutInitial.close();
+
+		long endTime = System.nanoTime();
+		timeSpentInitial += endTime - startTime;
+
+	}
+
+	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+
+		long startTime = System.nanoTime();
+
+		boolean readingFromF1 = false;
+
+		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *= 2) {
+
+			int lengthLeft = fileLength;
+
 			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
 			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
 			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
@@ -76,6 +136,7 @@ public class ExternalSort {
 			}
 
 			dOut.flush();
+
 			dIn1.close();
 			dIn2.close();
 			dOut.close();
@@ -84,20 +145,17 @@ public class ExternalSort {
 
 		}
 
-		if (!readingFromF1) {
-			FileChannel src = new FileInputStream(f2).getChannel();
-			FileChannel dest = new FileOutputStream(f1).getChannel();
-			dest.transferFrom(src, 0, length);
-		}
+		if (!readingFromF1) copyToF1(f1, f2, fileLength);
+
+		long endTime = System.nanoTime();
+		timeSpentMerge += endTime - startTime;
 
 	}
 
-	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
-		return new DataOutputStream( new BufferedOutputStream( new FileOutputStream(location) ) );
-	}
-
-	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
-		return new DataInputStream( new BufferedInputStream( new FileInputStream(location) ) );
+	private static void copyToF1(String f1, String f2, int fileLength) throws FileNotFoundException, IOException {
+		FileChannel src = new FileInputStream(f2).getChannel();
+		FileChannel dest = new FileOutputStream(f1).getChannel();
+		dest.transferFrom(src, 0, fileLength);
 	}
 
 	private static void printFile(DataInputStream dIn) {
@@ -149,16 +207,19 @@ public class ExternalSort {
 		//sort(f1, f2);
 		//System.out.println("The checksum is: " + checkSum(f1));
 
-		Instant start = Instant.now();
+		long startTime = System.nanoTime();
 		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
 		}
-		Instant end = Instant.now();
-		long timeTaken = Duration.between(start, end).getSeconds();
-		System.out.println("Time taken: " + timeTaken + " seconds");
+		long endTime = System.nanoTime();
+		long timeTaken = endTime - startTime;
+		System.out.println();
+		System.out.println("Time taken in initial sort: " + timeSpentInitial / 1000000 + "ms");
+		System.out.println("Time taken in mergesort: " + timeSpentMerge / 1000000 + "ms");
+		System.out.println("Total time taken: " + timeTaken / 1000000 + "ms");
 	}
 
 	private static void checkCheckSum(int testNum, String file) throws IOException {
@@ -183,7 +244,6 @@ public class ExternalSort {
 		};
 		String fileChecksum = checkSum(file);
 		System.out.print("Test file " + testNum);
-		System.out.print(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
-		System.out.println();
+		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
 	}
 }
