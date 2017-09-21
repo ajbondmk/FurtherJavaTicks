@@ -12,13 +12,14 @@ import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class ExternalSort {
+
+	private static long timeSpentInitial = 0;
+	private static long timeSpentMerge = 0;
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
@@ -43,6 +44,8 @@ public class ExternalSort {
 	}
 
 	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+
+		long startTime = System.nanoTime();
 
 		List<Integer> chunkToSort = new ArrayList<>();
 
@@ -71,9 +74,14 @@ public class ExternalSort {
 		dInInitial.close();
 		dOutInitial.close();
 
+		long endTime = System.nanoTime();
+		timeSpentInitial += endTime - startTime;
+
 	}
 
 	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+
+		long startTime = System.nanoTime();
 
 		boolean readingFromF1 = false;
 
@@ -139,6 +147,9 @@ public class ExternalSort {
 
 		if (!readingFromF1) copyToF1(f1, f2, fileLength);
 
+		long endTime = System.nanoTime();
+		timeSpentMerge += endTime - startTime;
+
 	}
 
 	private static void copyToF1(String f1, String f2, int fileLength) throws FileNotFoundException, IOException {
@@ -196,17 +207,19 @@ public class ExternalSort {
 		//sort(f1, f2);
 		//System.out.println("The checksum is: " + checkSum(f1));
 
-		Instant start = Instant.now();
+		long startTime = System.nanoTime();
 		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
-			//printFile(getInputStream(f1));
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
 		}
-		Instant end = Instant.now();
-		long timeTaken = Duration.between(start, end).getSeconds();
-		System.out.println("Time taken: " + timeTaken + " seconds");
+		long endTime = System.nanoTime();
+		long timeTaken = endTime - startTime;
+		System.out.println();
+		System.out.println("Time taken in initial sort: " + timeSpentInitial / 1000000 + "ms");
+		System.out.println("Time taken in mergesort: " + timeSpentMerge / 1000000 + "ms");
+		System.out.println("Total time taken: " + timeTaken / 1000000 + "ms");
 	}
 
 	private static void checkCheckSum(int testNum, String file) throws IOException {
@@ -232,7 +245,5 @@ public class ExternalSort {
 		String fileChecksum = checkSum(file);
 		System.out.print("Test file " + testNum);
 		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
-		//printFile(getInputStream(file));
-		//System.out.println();
 	}
 }
