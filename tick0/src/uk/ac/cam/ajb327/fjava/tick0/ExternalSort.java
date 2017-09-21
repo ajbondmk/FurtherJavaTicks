@@ -1,19 +1,22 @@
 package uk.ac.cam.ajb327.fjava.tick0;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
+import java.io.DataOutputStream;
 import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class ExternalSort {
 
@@ -21,14 +24,54 @@ public class ExternalSort {
 
 		//All lengths and counts are in bytes
 		DataInputStream tempIn = getInputStream(f1);
-		int length = tempIn.available();
+		int fileLength = tempIn.available();
 		tempIn.close();
 
-		boolean readingFromF1 = true;
+		int initialSortInts = 65536;
 
-		for (int chunkSize = 4; chunkSize < length; chunkSize *= 2) {
+		initialSort(f1, f2, fileLength, initialSortInts);
+		mergeSort(f1, f2, fileLength, initialSortInts);
 
-			int lengthLeft = length;
+	}
+
+	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
+		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
+	}
+
+	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
+		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
+	}
+
+	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+		List<Integer> chunk = new ArrayList<>();
+
+		DataInputStream dInInitial = getInputStream(f1);
+		DataOutputStream dOutInitial = getOutputStream(f2);
+
+		for (int num = 1; num <= fileLength / 4; num++) {
+			chunk.add(dInInitial.readInt());
+			boolean endOfChunk = (num) % initialSortInts == 0;
+			boolean endOfFile = num == fileLength / 4;
+			if (endOfChunk || endOfFile) {
+				Collections.sort(chunk);
+				for (int numToWrite = 0; numToWrite < chunk.size(); numToWrite++) {
+					dOutInitial.writeInt(chunk.get(numToWrite));
+				}
+				chunk.clear();
+				if (endOfFile) break;
+			}
+		}
+
+		dOutInitial.flush();
+	}
+
+	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+
+		boolean readingFromF1 = false;
+
+		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *=2) {
+
+			int lengthLeft = fileLength;
 			DataInputStream dIn1 = getInputStream(readingFromF1 ? f1 : f2);
 			DataInputStream dIn2 = getInputStream(readingFromF1 ? f1 : f2);
 			DataOutputStream dOut = getOutputStream(readingFromF1 ? f2 : f1);
@@ -84,20 +127,14 @@ public class ExternalSort {
 
 		}
 
-		if (!readingFromF1) {
-			FileChannel src = new FileInputStream(f2).getChannel();
-			FileChannel dest = new FileOutputStream(f1).getChannel();
-			dest.transferFrom(src, 0, length);
-		}
+		if (!readingFromF1) copyToF1(f1, f2, fileLength);
 
 	}
 
-	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
-		return new DataOutputStream( new BufferedOutputStream( new FileOutputStream(location) ) );
-	}
-
-	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
-		return new DataInputStream( new BufferedInputStream( new FileInputStream(location) ) );
+	private static void copyToF1(String f1, String f2, int fileLength) throws FileNotFoundException, IOException {
+		FileChannel src = new FileInputStream(f2).getChannel();
+		FileChannel dest = new FileOutputStream(f1).getChannel();
+		dest.transferFrom(src, 0, fileLength);
 	}
 
 	private static void printFile(DataInputStream dIn) {
@@ -153,6 +190,7 @@ public class ExternalSort {
 		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
+			//printFile(getInputStream(f1));
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
 		}
@@ -183,7 +221,8 @@ public class ExternalSort {
 		};
 		String fileChecksum = checkSum(file);
 		System.out.print("Test file " + testNum);
-		System.out.print(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
-		System.out.println();
+		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
+		//printFile(getInputStream(file));
+		//System.out.println();
 	}
 }
