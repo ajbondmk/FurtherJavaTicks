@@ -35,15 +35,15 @@ public class ExternalSort {
 
 	}
 
-	private static DataOutputStream getOutputStream(String location) throws FileNotFoundException, IOException {
+	private static DataOutputStream getOutputStream(String location) throws IOException {
 		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
 	}
 
-	private static DataInputStream getInputStream(String location) throws FileNotFoundException, IOException {
+	private static DataInputStream getInputStream(String location) throws IOException {
 		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
 	}
 
-	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
 
 		long startTime = System.nanoTime();
 
@@ -60,9 +60,8 @@ public class ExternalSort {
 			boolean endOfFile = (num == fileLengthInts);
 			if (endOfChunk || endOfFile) {
 				Collections.sort(chunkToSort);
-				int chunkSize = chunkToSort.size();
-				for (int numToWrite = 0; numToWrite < chunkSize; numToWrite++) {
-					dOutInitial.writeInt(chunkToSort.get(numToWrite));
+				for (Integer i : chunkToSort) {
+					dOutInitial.writeInt(i);
 				}
 				chunkToSort.clear();
 				if (endOfFile) break;
@@ -79,7 +78,7 @@ public class ExternalSort {
 
 	}
 
-	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws FileNotFoundException, IOException {
+	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
 
 		long startTime = System.nanoTime();
 
@@ -152,7 +151,7 @@ public class ExternalSort {
 
 	}
 
-	private static void copyToF1(String f1, String f2, int fileLength) throws FileNotFoundException, IOException {
+	private static void copyToF1(String f1, String f2, int fileLength) throws IOException {
 		FileChannel src = new FileInputStream(f2).getChannel();
 		FileChannel dest = new FileOutputStream(f1).getChannel();
 		dest.transferFrom(src, 0, fileLength);
