@@ -7,52 +7,36 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SortThread extends Thread {
+public class Sorter {
 
 	private String f2;
 	private String f1;
-	private boolean onlyThread;
-	private boolean finalMerge;
-	private int startPos;
 	private int fileLength;
 	private int initialSortInts;
 
-	SortThread (String F1, String F2, boolean OnlyThread, boolean FinalMerge, int StartPos, int FileLength, int InitialSortInts) {
+	Sorter(String F1, String F2, int FileLength, int InitialSortInts) {
 		f1 = F1;
 		f2 = F2;
-		onlyThread = OnlyThread;
-		finalMerge = FinalMerge;
-		startPos = StartPos;
 		fileLength = FileLength;
 		initialSortInts = InitialSortInts;
 	}
 
-	public void run () {
-		try {
-			if (!finalMerge) initialSort();
-			mergeSort();
-		} catch (IOException e) {
-			//TODO: REMOVE THIS
-			System.out.println("ERROR: " + e.getMessage());
-		}
+	public void sort() throws IOException {
+		initialSort();
+		mergeSort();
 	}
 
 	private DataOutputStream getOutputStream(String location) throws IOException {
-		RandomAccessFile f = new RandomAccessFile(location, "rw");
-		f.seek(startPos);
-		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f.getFD())));
+		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
 	}
 
 	private DataInputStream getInputStream(String location) throws IOException {
-		DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
-		dIn.skip(startPos);
-		return dIn;
+		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
 	}
 
 	private void initialSort() throws IOException {
@@ -89,10 +73,7 @@ public class SortThread extends Thread {
 
 		boolean readingFromF1 = false;
 
-		int chunkSize = initialSortInts * 4;
-		if (finalMerge) chunkSize = (initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1));
-
-		for (; chunkSize < fileLength; chunkSize *= 2) {
+		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *= 2) {
 
 			int lengthLeft = fileLength;
 
@@ -157,22 +138,10 @@ public class SortThread extends Thread {
 	}
 
 	private void copyToCorrectFile(boolean fileInF1) throws IOException {
-		if (onlyThread) {
-			if (!fileInF1) {
-				FileChannel src = new FileInputStream(f2).getChannel();
-				FileChannel dest = new FileOutputStream(f1).getChannel();
-				dest.transferFrom(src, 0, fileLength);
-			}
-		} else {
-			//Efficient for 2 threads, not for 4
-			if (fileInF1) {
-				DataInputStream dIn = getInputStream(f1);
-				DataOutputStream dOut = getOutputStream(f2);
-				for (int i = 0; i < fileLength / 4; i++) {
-					dOut.writeInt(dIn.readInt());
-				}
-				dOut.flush();
-			}
+		if (!fileInF1) {
+			FileChannel src = new FileInputStream(f2).getChannel();
+			FileChannel dest = new FileOutputStream(f1).getChannel();
+			dest.transferFrom(src, 0, fileLength);
 		}
 	}
 
@@ -188,7 +157,6 @@ public class SortThread extends Thread {
 				System.out.println("Current position: " + i*4);
 				System.out.println("File length: " + fileLength);
 				System.out.println();
-				//return;
 			}
 			previous = current;
 		}
@@ -209,7 +177,6 @@ public class SortThread extends Thread {
 		}
 	}
 
-	@SuppressWarnings("Duplicates")
 	private void printFile2(String file) {
 		try {
 			System.out.println("Start of thread print");

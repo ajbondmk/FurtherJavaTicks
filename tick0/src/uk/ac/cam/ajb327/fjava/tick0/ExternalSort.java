@@ -19,64 +19,9 @@ public class ExternalSort {
 
 		int initialSortInts = 262144;
 
-		int splitPosition = initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1);
+		Sorter s = new Sorter(f1, f2, fileLength, initialSortInts);
+		s.sort();
 
-		if (splitPosition > fileLength) {
-			SortThread t1 = new SortThread(f1, f2, true, false, 0, fileLength, initialSortInts);
-			t1.start();
-
-			try {
-				t1.join();
-			} catch (InterruptedException e) {
-				System.out.println("Interrupted");
-			}
-		} else {
-			SortThread t1 = new SortThread(f1, f2, false, false, 0, splitPosition, initialSortInts);
-			t1.start();
-
-			SortThread t2 = new SortThread(f1, f2, false, false, splitPosition, fileLength - splitPosition, initialSortInts);
-			t2.start();
-
-			try {
-				t1.join();
-				t2.join();
-			} catch (InterruptedException e) {
-				System.out.println("Interrupted");
-			}
-
-			SortThread tFinal = new SortThread(f1, f2, true, true, 0, fileLength, initialSortInts);
-			tFinal.start();
-
-			try {
-				tFinal.join();
-			} catch (InterruptedException e) {
-				System.out.println("Interrupted");
-			}
-
-		}
-
-	}
-
-	@SuppressWarnings("Duplicates")
-	private static void printFile(String file) {
-		try {
-			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
-			int nextItem = dIn.readInt();
-			int currentValue = nextItem;
-			int count = 1;
-			while (dIn.available() > 0) {
-				nextItem = dIn.readInt();
-				if (currentValue == nextItem) count++;
-				else {
-					System.out.println(currentValue + " - " + count);
-					currentValue = nextItem;
-					count = 1;
-				}
-			}
-			System.out.println();
-		} catch (IOException err) {
-			System.out.println(err.getMessage());
-		}
 	}
 
 	private static String byteToHex(byte b) {
@@ -112,11 +57,11 @@ public class ExternalSort {
 	}
 
 	public static void main(String[] args) throws Exception {
-		//String f1 = args[0];
-		//String f2 = args[1];
-		//sort(f1, f2);
-		//System.out.println("The checksum is: " + checkSum(f1));
-
+//		String f1 = args[0];
+//		String f2 = args[1];
+//		sort(f1, f2);
+//		System.out.println("The checksum is: " + checkSum(f1));
+		
 		long startTime = System.nanoTime();
 		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
@@ -154,4 +99,18 @@ public class ExternalSort {
 		System.out.print("Test file " + testNum);
 		System.out.println(fileChecksum.equals(correctChecksums[testNum-1]) ? " passed!" : " failed.");
 	}
+
+	@SuppressWarnings("Duplicates")
+	private static void printFile(String f) {
+		try {
+			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+			while (dIn.available() > 0) {
+				System.out.print(dIn.readInt() + " ");
+			}
+			System.out.println();
+		} catch (IOException err) {
+			System.out.println(err.getMessage());
+		}
+	}
+
 }
