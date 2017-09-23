@@ -37,7 +37,6 @@ public class SortThread extends Thread {
 		try {
 			if (!finalMerge) initialSort();
 			mergeSort();
-			if (!finalMerge) checkIfSorted(f2);
 		} catch (IOException e) {
 			//TODO: REMOVE THIS
 			System.out.println("ERROR: " + e.getMessage());
@@ -172,6 +171,7 @@ public class SortThread extends Thread {
 				for (int i = 0; i < fileLength / 4; i++) {
 					dOut.writeInt(dIn.readInt());
 				}
+				dOut.flush();
 			}
 		}
 	}
@@ -203,6 +203,37 @@ public class SortThread extends Thread {
 			while (dIn.available() > 0) {
 				System.out.print(dIn.readInt() + " ");
 			}
+			System.out.println();
+		} catch (IOException err) {
+			System.out.println(err.getMessage());
+		}
+	}
+
+	@SuppressWarnings("Duplicates")
+	private void printFile2(String file) {
+		try {
+			System.out.println("Start of thread print");
+			DataInputStream dIn = getInputStream(file);
+			int nextItem = dIn.readInt();
+			int currentValue = nextItem;
+			int count = 1;
+			int drops = 0;
+			for (int i = 1; i < fileLength / 4; i++) {
+				nextItem = dIn.readInt();
+				if (currentValue == nextItem) count++;
+				else {
+					System.out.print(currentValue + " - " + count);
+					if (nextItem < currentValue) {
+						drops++;
+						System.out.print(" " + drops + " drop(s)");
+					}
+					System.out.println();
+					currentValue = nextItem;
+					count = 1;
+				}
+			}
+			System.out.println(currentValue + " - " + count);
+			System.out.println("End of thread, " + drops + " drops");
 			System.out.println();
 		} catch (IOException err) {
 			System.out.println(err.getMessage());

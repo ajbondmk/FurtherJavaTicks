@@ -11,9 +11,6 @@ import java.security.NoSuchAlgorithmException;
 
 public class ExternalSort {
 
-	//private static int timeSpentInitial = 0;
-	//private static int timeSpentMerge = 0;
-
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
 		FileInputStream fIn = new FileInputStream(f1);
@@ -37,13 +34,6 @@ public class ExternalSort {
 			SortThread t1 = new SortThread(f1, f2, false, false, 0, splitPosition, initialSortInts);
 			t1.start();
 
-			//TODO: DELETE THIS
-			try {
-				t1.join();
-			} catch (InterruptedException e) {
-				System.out.println("Interrupted");
-			}
-
 			SortThread t2 = new SortThread(f1, f2, false, false, splitPosition, fileLength - splitPosition, initialSortInts);
 			t2.start();
 
@@ -65,17 +55,23 @@ public class ExternalSort {
 
 		}
 
-		//timeSpentInitial += t1.timeSpentInitial;
-		//timeSpentMerge += t1.timeSpentMerge;
-
 	}
 
 	@SuppressWarnings("Duplicates")
 	private static void printFile(String file) {
 		try {
 			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+			int nextItem = dIn.readInt();
+			int currentValue = nextItem;
+			int count = 1;
 			while (dIn.available() > 0) {
-				System.out.print(dIn.readInt() + " ");
+				nextItem = dIn.readInt();
+				if (currentValue == nextItem) count++;
+				else {
+					System.out.println(currentValue + " - " + count);
+					currentValue = nextItem;
+					count = 1;
+				}
 			}
 			System.out.println();
 		} catch (IOException err) {
@@ -122,21 +118,15 @@ public class ExternalSort {
 		//System.out.println("The checksum is: " + checkSum(f1));
 
 		long startTime = System.nanoTime();
-		for (int testNum = 17; testNum <= 17; testNum++) {
+		for (int testNum = 1; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
-//			System.out.println("F1:");
-//			printFile(f1);
-//			System.out.println("F2:");
-//			printFile(f2);
 		}
 		long endTime = System.nanoTime();
 		long timeTaken = endTime - startTime;
 		System.out.println();
-		//System.out.println("Time taken in initial sort: " + timeSpentInitial / 1000000 + "ms");
-		//System.out.println("Time taken in mergesort: " + timeSpentMerge / 1000000 + "ms");
 		System.out.println("Total time taken: " + timeTaken / 1000000 + "ms");
 	}
 
