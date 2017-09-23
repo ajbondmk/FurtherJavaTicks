@@ -17,7 +17,7 @@ public class ExternalSort {
 		int fileLength = fIn.available();
 		fIn.close();
 
-		int initialSortInts = 65536;
+		int initialSortInts = 262144;
 
 		int splitPosition = initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1);
 
