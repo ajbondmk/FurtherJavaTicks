@@ -22,8 +22,22 @@ public class ExternalSort {
 
 		int initialSortInts = 65536;
 
-		SortThread t1 = new SortThread(f1, f2, 0, fileLength, initialSortInts);
+		int splitPosition = initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1);
+		int chunkOneSize = (splitPosition > fileLength) ? fileLength : splitPosition;
+
+		SortThread t1 = new SortThread(f1, f2, 0, chunkOneSize, initialSortInts);
 		t1.start();
+
+		if (chunkOneSize < fileLength) {
+			SortThread t2 = new SortThread(f1, f2, splitPosition, fileLength - splitPosition, initialSortInts);
+			t2.start();
+
+			try {
+				t2.join();
+			} catch (InterruptedException e) {
+				System.out.println("Interrupted");
+			}
+		}
 
 		try {
 			t1.join();
@@ -93,7 +107,7 @@ public class ExternalSort {
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
-			//printFile(f1);
+			//printFile(f2);
 		}
 		long endTime = System.nanoTime();
 		long timeTaken = endTime - startTime;

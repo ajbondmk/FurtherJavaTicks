@@ -38,7 +38,7 @@ public class SortThread extends Thread {
 			mergeSort(f1, f2, fileLength, initialSortInts);
 		} catch (IOException e) {
 			//TODO: REMOVE THIS
-			System.out.println("IO EXCEPTION HALP");
+			System.out.println("ERROR: " + e.getMessage());
 		}
 	}
 
@@ -155,7 +155,7 @@ public class SortThread extends Thread {
 
 		}
 
-		if (!readingFromF1) copyToF1(f1, f2, fileLength);
+		//if (!readingFromF1) copyToF1(f1, f2, fileLength);
 
 		long endTime = System.nanoTime();
 		timeSpentMerge += endTime - startTime;
