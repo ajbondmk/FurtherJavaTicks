@@ -18,14 +18,16 @@ public class SortThread extends Thread {
 	private String f2;
 	private String f1;
 	private boolean onlyThread;
+	private boolean finalMerge;
 	private int startPos;
 	private int fileLength;
 	private int initialSortInts;
 
-	SortThread (String F1, String F2, boolean OnlyThread, int StartPos, int FileLength, int InitialSortInts) {
+	SortThread (String F1, String F2, boolean OnlyThread, boolean FinalMerge, int StartPos, int FileLength, int InitialSortInts) {
 		f1 = F1;
 		f2 = F2;
 		onlyThread = OnlyThread;
+		finalMerge = FinalMerge;
 		startPos = StartPos;
 		fileLength = FileLength;
 		initialSortInts = InitialSortInts;
@@ -33,8 +35,9 @@ public class SortThread extends Thread {
 
 	public void run () {
 		try {
-			initialSort(f1, f2, fileLength, initialSortInts);
-			mergeSort(f1, f2, fileLength, initialSortInts);
+			if (!finalMerge) initialSort();
+			mergeSort();
+			if (!finalMerge) checkIfSorted(f2);
 		} catch (IOException e) {
 			//TODO: REMOVE THIS
 			System.out.println("ERROR: " + e.getMessage());
@@ -87,7 +90,10 @@ public class SortThread extends Thread {
 
 		boolean readingFromF1 = false;
 
-		for (int chunkSize = initialSortInts * 4; chunkSize < fileLength; chunkSize *= 2) {
+		int chunkSize = initialSortInts * 4;
+		if (finalMerge) chunkSize = (initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1));
+
+		for (; chunkSize < fileLength; chunkSize *= 2) {
 
 			int lengthLeft = fileLength;
 
@@ -168,6 +174,26 @@ public class SortThread extends Thread {
 				}
 			}
 		}
+	}
+
+	private void checkIfSorted(String f) throws IOException {
+		DataInputStream dIn = getInputStream(f);
+		int previous = Integer.MIN_VALUE;
+		for (int i = 0; i < fileLength / 4; i++) {
+			int current = dIn.readInt();
+			if (current < previous) {
+				System.out.println("NOT SORTED");
+				System.out.println("Previous: " + previous);
+				System.out.println("Current:  " + current);
+				System.out.println("Current position: " + i*4);
+				System.out.println("File length: " + fileLength);
+				System.out.println();
+				//return;
+			}
+			previous = current;
+		}
+		System.out.println("End of sort check.");
+		System.out.println();
 	}
 
 	@SuppressWarnings("Duplicates")

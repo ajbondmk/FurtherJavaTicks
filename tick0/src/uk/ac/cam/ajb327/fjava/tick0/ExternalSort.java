@@ -25,7 +25,7 @@ public class ExternalSort {
 		int splitPosition = initialSortInts * 4 * (((fileLength / 2) / (initialSortInts * 4)) + 1);
 
 		if (splitPosition > fileLength) {
-			SortThread t1 = new SortThread(f1, f2, true, 0, fileLength, initialSortInts);
+			SortThread t1 = new SortThread(f1, f2, true, false, 0, fileLength, initialSortInts);
 			t1.start();
 
 			try {
@@ -33,11 +33,18 @@ public class ExternalSort {
 			} catch (InterruptedException e) {
 				System.out.println("Interrupted");
 			}
-		}
-		else {
-			SortThread t1 = new SortThread(f1, f2, false, 0, splitPosition, initialSortInts);
+		} else {
+			SortThread t1 = new SortThread(f1, f2, false, false, 0, splitPosition, initialSortInts);
 			t1.start();
-			SortThread t2 = new SortThread(f1, f2, false, splitPosition, fileLength - splitPosition, initialSortInts);
+
+			//TODO: DELETE THIS
+			try {
+				t1.join();
+			} catch (InterruptedException e) {
+				System.out.println("Interrupted");
+			}
+
+			SortThread t2 = new SortThread(f1, f2, false, false, splitPosition, fileLength - splitPosition, initialSortInts);
 			t2.start();
 
 			try {
@@ -46,6 +53,16 @@ public class ExternalSort {
 			} catch (InterruptedException e) {
 				System.out.println("Interrupted");
 			}
+
+			SortThread tFinal = new SortThread(f1, f2, true, true, 0, fileLength, initialSortInts);
+			tFinal.start();
+
+			try {
+				tFinal.join();
+			} catch (InterruptedException e) {
+				System.out.println("Interrupted");
+			}
+
 		}
 
 		//timeSpentInitial += t1.timeSpentInitial;
@@ -105,7 +122,7 @@ public class ExternalSort {
 		//System.out.println("The checksum is: " + checkSum(f1));
 
 		long startTime = System.nanoTime();
-		for (int testNum = 1; testNum <= 17; testNum++) {
+		for (int testNum = 17; testNum <= 17; testNum++) {
 			String f1 = "test-suite/test" + testNum + "a.dat";
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
