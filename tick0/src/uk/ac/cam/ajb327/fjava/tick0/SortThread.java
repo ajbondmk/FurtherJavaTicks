@@ -17,16 +17,15 @@ public class SortThread extends Thread {
 
 	private String f2;
 	private String f1;
+	private boolean onlyThread;
 	private int startPos;
 	private int fileLength;
 	private int initialSortInts;
 
-	public static long timeSpentInitial = 0;
-	public static long timeSpentMerge = 0;
-
-	SortThread (String F1, String F2, int StartPos, int FileLength, int InitialSortInts) {
+	SortThread (String F1, String F2, boolean OnlyThread, int StartPos, int FileLength, int InitialSortInts) {
 		f1 = F1;
 		f2 = F2;
+		onlyThread = OnlyThread;
 		startPos = StartPos;
 		fileLength = FileLength;
 		initialSortInts = InitialSortInts;
@@ -54,9 +53,7 @@ public class SortThread extends Thread {
 		return dIn;
 	}
 
-	private void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
-
-		long startTime = System.nanoTime();
+	private void initialSort() throws IOException {
 
 		List<Integer> chunkToSort = new ArrayList<>();
 
@@ -84,14 +81,9 @@ public class SortThread extends Thread {
 		dInInitial.close();
 		dOutInitial.close();
 
-		long endTime = System.nanoTime();
-		timeSpentInitial += endTime - startTime;
-
 	}
 
-	private void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
-
-		long startTime = System.nanoTime();
+	private void mergeSort() throws IOException {
 
 		boolean readingFromF1 = false;
 
@@ -155,17 +147,27 @@ public class SortThread extends Thread {
 
 		}
 
-		//if (!readingFromF1) copyToF1(f1, f2, fileLength);
-
-		long endTime = System.nanoTime();
-		timeSpentMerge += endTime - startTime;
+		copyToCorrectFile(readingFromF1);
 
 	}
 
-	private static void copyToF1(String f1, String f2, int fileLength) throws IOException {
-		FileChannel src = new FileInputStream(f2).getChannel();
-		FileChannel dest = new FileOutputStream(f1).getChannel();
-		dest.transferFrom(src, 0, fileLength);
+	private void copyToCorrectFile(boolean fileInF1) throws IOException {
+		if (onlyThread) {
+			if (!fileInF1) {
+				FileChannel src = new FileInputStream(f2).getChannel();
+				FileChannel dest = new FileOutputStream(f1).getChannel();
+				dest.transferFrom(src, 0, fileLength);
+			}
+		} else {
+			//Efficient for 2 threads, not for 4
+			if (fileInF1) {
+				DataInputStream dIn = getInputStream(f1);
+				DataOutputStream dOut = getOutputStream(f2);
+				for (int i = 0; i < fileLength / 4; i++) {
+					dOut.writeInt(dIn.readInt());
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("Duplicates")
