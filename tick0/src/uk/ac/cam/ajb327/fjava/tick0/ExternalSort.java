@@ -3,11 +3,8 @@ package uk.ac.cam.ajb327.fjava.tick0;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -19,49 +16,30 @@ public class ExternalSort {
 
 	public static void sort(String f1, String f2) throws FileNotFoundException, IOException {
 
-		//All lengths and counts are in bytes
-		DataInputStream tempIn = getInputStream(f1);
-		int fileLength = tempIn.available();
-		tempIn.close();
+		FileInputStream fIn = new FileInputStream(f1);
+		int fileLength = fIn.available();
+		fIn.close();
 
 		int initialSortInts = 65536;
 
-		SortThread t1 = new SortThread("testThread");
-		t1.start(f1, f2, 0, fileLength, initialSortInts);
+		SortThread t1 = new SortThread(f1, f2, 0, fileLength, initialSortInts);
+		t1.start();
 
 		try {
 			t1.join();
-		} catch (Exception e) {
+		} catch (InterruptedException e) {
 			System.out.println("Interrupted");
 		}
-
-//		try {
-//			Thread.sleep(10000);
-//		} catch (InterruptedException e) {
-//
-//		}
 
 		timeSpentInitial += t1.timeSpentInitial;
 		timeSpentMerge += t1.timeSpentMerge;
 
-		System.out.println();
-		System.out.println("Back in main class");
-
-		//initialSort(f1, f2, fileLength, initialSortInts);
-		//mergeSort(f1, f2, fileLength, initialSortInts);
-
 	}
 
-	private static DataOutputStream getOutputStream(String location) throws IOException {
-		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
-	}
-
-	private static DataInputStream getInputStream(String location) throws IOException {
-		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
-	}
-
-	private static void printFile(DataInputStream dIn) {
+	@SuppressWarnings("Duplicates")
+	private static void printFile(String file) {
 		try {
+			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
 			while (dIn.available() > 0) {
 				System.out.print(dIn.readInt() + " ");
 			}
@@ -115,7 +93,7 @@ public class ExternalSort {
 			String f2 = "test-suite/test" + testNum + "b.dat";
 			sort(f1, f2);
 			checkCheckSum(testNum, f1);
-			//printFile(getInputStream(f1));
+			//printFile(f1);
 		}
 		long endTime = System.nanoTime();
 		long timeTaken = endTime - startTime;

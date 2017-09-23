@@ -15,9 +15,6 @@ import java.util.List;
 
 public class SortThread extends Thread {
 
-	private Thread thread;
-	private String threadName;
-
 	private String f2;
 	private String f1;
 	private int startPos;
@@ -27,8 +24,12 @@ public class SortThread extends Thread {
 	public static long timeSpentInitial = 0;
 	public static long timeSpentMerge = 0;
 
-	SortThread (String name) {
-		threadName = name;
+	SortThread (String F1, String F2, int StartPos, int FileLength, int InitialSortInts) {
+		f1 = F1;
+		f2 = F2;
+		startPos = StartPos;
+		fileLength = FileLength;
+		initialSortInts = InitialSortInts;
 	}
 
 	public void run () {
@@ -38,18 +39,6 @@ public class SortThread extends Thread {
 		} catch (IOException e) {
 			//TODO: REMOVE THIS
 			System.out.println("IO EXCEPTION HALP");
-		}
-	}
-
-	public void start (String F1, String F2, int StartPos, int FileLength, int InitialSortInts) {
-		f1 = F1;
-		f2 = F2;
-		startPos = StartPos;
-		fileLength = FileLength;
-		initialSortInts = InitialSortInts;
-		if (thread == null) {
-			thread = new Thread (this, threadName);
-			thread.start();
 		}
 	}
 
@@ -98,20 +87,6 @@ public class SortThread extends Thread {
 		long endTime = System.nanoTime();
 		timeSpentInitial += endTime - startTime;
 
-		System.out.println("End of initial sort");
-
-	}
-
-	private static void printFile(String f) {
-		try {
-			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-			while (dIn.available() > 0) {
-				System.out.print(dIn.readInt() + " ");
-			}
-			System.out.println();
-		} catch (IOException err) {
-			System.out.println(err.getMessage());
-		}
 	}
 
 	private void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
@@ -185,14 +160,25 @@ public class SortThread extends Thread {
 		long endTime = System.nanoTime();
 		timeSpentMerge += endTime - startTime;
 
-		System.out.println("End of merge sort");
-
 	}
 
 	private static void copyToF1(String f1, String f2, int fileLength) throws IOException {
 		FileChannel src = new FileInputStream(f2).getChannel();
 		FileChannel dest = new FileOutputStream(f1).getChannel();
 		dest.transferFrom(src, 0, fileLength);
+	}
+
+	@SuppressWarnings("Duplicates")
+	private static void printFile(String f) {
+		try {
+			DataInputStream dIn = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+			while (dIn.available() > 0) {
+				System.out.print(dIn.readInt() + " ");
+			}
+			System.out.println();
+		} catch (IOException err) {
+			System.out.println(err.getMessage());
+		}
 	}
 
 }
