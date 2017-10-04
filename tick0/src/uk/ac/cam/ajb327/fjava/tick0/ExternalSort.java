@@ -17,8 +17,7 @@ public class ExternalSort {
 
 		int initialSortInts = 262144;
 
-		Sorter s = new Sorter(f1, f2, fileLength, initialSortInts);
-		s.sort();
+		Sorter.sort(f1, f2, fileLength, initialSortInts);
 
 	}
 

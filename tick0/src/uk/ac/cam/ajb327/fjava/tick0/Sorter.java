@@ -14,32 +14,20 @@ import java.util.List;
 
 public class Sorter {
 
-	private String f2;
-	private String f1;
-	private int fileLength;
-	private int initialSortInts;
-
-	Sorter(String F1, String F2, int FileLength, int InitialSortInts) {
-		f1 = F1;
-		f2 = F2;
-		fileLength = FileLength;
-		initialSortInts = InitialSortInts;
+	public static void sort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
+		initialSort(f1, f2, fileLength, initialSortInts);
+		mergeSort(f1, f2, fileLength, initialSortInts);
 	}
 
-	public void sort() throws IOException {
-		initialSort();
-		mergeSort();
-	}
-
-	private DataOutputStream getOutputStream(String location) throws IOException {
+	private static DataOutputStream getOutputStream(String location) throws IOException {
 		return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(location)));
 	}
 
-	private DataInputStream getInputStream(String location) throws IOException {
+	private static DataInputStream getInputStream(String location) throws IOException {
 		return new DataInputStream(new BufferedInputStream(new FileInputStream(location)));
 	}
 
-	private void initialSort() throws IOException {
+	private static void initialSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
 
 		List<Integer> chunkToSort = new ArrayList<>();
 
@@ -69,7 +57,7 @@ public class Sorter {
 
 	}
 
-	private void mergeSort() throws IOException {
+	private static void mergeSort(String f1, String f2, int fileLength, int initialSortInts) throws IOException {
 
 		boolean readingFromF1 = false;
 
@@ -133,11 +121,11 @@ public class Sorter {
 
 		}
 
-		copyToCorrectFile(readingFromF1);
+		copyToCorrectFile(f1, f2, fileLength, readingFromF1);
 
 	}
 
-	private void copyToCorrectFile(boolean fileInF1) throws IOException {
+	private static void copyToCorrectFile(String f1, String f2, int fileLength, boolean fileInF1) throws IOException {
 		if (!fileInF1) {
 			FileChannel src = new FileInputStream(f2).getChannel();
 			FileChannel dest = new FileOutputStream(f1).getChannel();
