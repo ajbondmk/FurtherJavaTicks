@@ -5,6 +5,8 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+// This class contains functions written to help debug
+
 public class TestFunctions {
 
 	public static void mainTest() throws IOException {
